@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>checkAO3</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <main class="app">
+      <header class="hero">
+        <div>
+          <p class="eyebrow">Firefox extension</p>
+          <h1>checkAO3</h1>
+        </div>
+        <p class="subtitle">Paste an AO3 author link, let the extension walk the works pages, and keep local growth snapshots.</p>
+      </header>
+
+      <section class="panel">
+        <form id="author-form" class="stack">
+          <label for="author-url">AO3 author URL</label>
+          <input
+            id="author-url"
+            name="author-url"
+            type="url"
+            placeholder="https://archiveofourown.org/users/username/works"
+            required
+          />
+          <div class="actions">
+            <button id="refresh-button" type="submit">Refresh</button>
+            <button id="export-button" type="button" class="ghost">Export CSV</button>
+            <button id="clear-button" type="button" class="ghost">Clear</button>
+          </div>
+        </form>
+        <p id="status" class="status">Ready.</p>
+      </section>
+
+      <section class="panel dashboard">
+        <div>
+          <div class="meta-label">Author</div>
+          <div id="author-name" class="meta-value">Not loaded</div>
+        </div>
+        <div>
+          <div class="meta-label">Last refresh</div>
+          <div id="last-refresh" class="meta-value">Never</div>
+        </div>
+        <div>
+          <div class="meta-label">Works tracked</div>
+          <div id="work-count" class="meta-value">0</div>
+        </div>
+      </section>
+
+      <section class="panel compact-panel">
+        <div class="period-bar">
+          <span class="meta-label">Growth window</span>
+          <div class="period-switch" id="period-switch">
+            <button type="button" data-days="1" class="period-button is-active">24h</button>
+            <button type="button" data-days="7" class="period-button">7d</button>
+            <button type="button" data-days="30" class="period-button">30d</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Work</th>
+                <th>Hits</th>
+                <th>Kudos</th>
+                <th>Bookmarks</th>
+                <th>Comments</th>
+              </tr>
+            </thead>
+            <tbody id="works-body">
+              <tr>
+                <td colspan="5" class="empty">No stats yet.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <script src="../lib/dates.js"></script>
+    <script src="../lib/storage.js"></script>
+    <script src="popup.js"></script>
+  </body>
+</html>
