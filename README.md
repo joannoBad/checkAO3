@@ -12,38 +12,6 @@
 - shows current stats plus growth for `24h`, `7d`, or `30d`
 - exports the current table as CSV
 
-## Screenshot
-
-Example popup view with sensitive AO3 identifiers redacted:
-
-![Redacted checkAO3 popup screenshot](docs/images/popup-redacted.png)
-
-## Current MVP limits
-
-- optimized for public author work pages
-- uses one selected growth window at a time in the popup
-- does not handle AO3 login flows inside the extension UI
-- stores data only in the local Firefox profile
-- growth values depend on how many snapshots you already collected locally
-
-## Legal and policy note
-
-- the repository code remains MIT-licensed in [LICENSE](d:\projects\checkAO3\LICENSE)
-- AO3 policy is separate from the source-code license
-- this project is unofficial and is not affiliated with AO3 or OTW
-- see [NOTICE.md](d:\projects\checkAO3\NOTICE.md) for the AO3-specific notice
-
-## Project structure
-
-- [manifest.json](d:\projects\checkAO3\manifest.json): Firefox extension manifest
-- [popup/popup.html](d:\projects\checkAO3\popup\popup.html): popup markup
-- [popup/popup.css](d:\projects\checkAO3\popup\popup.css): popup styling
-- [popup/popup.js](d:\projects\checkAO3\popup\popup.js): popup rendering and CSV export
-- [background/background.js](d:\projects\checkAO3\background\background.js): page walking and snapshot saving
-- [content/ao3-parser.js](d:\projects\checkAO3\content\ao3-parser.js): AO3 page parser
-- [lib/dates.js](d:\projects\checkAO3\lib\dates.js): formatting and delta calculations
-- [lib/storage.js](d:\projects\checkAO3\lib\storage.js): local Firefox storage helpers
-
 ## Requirements
 
 - Firefox desktop
@@ -82,6 +50,12 @@ After that, the extension should appear in the Firefox extensions list and in th
 5. The table will fill with current stats for each work.
 6. Use the `24h`, `7d`, and `30d` buttons to switch the growth window.
 7. Click `Export CSV` if you want to save the current table.
+
+## Screenshot
+
+Example popup view with sensitive AO3 identifiers redacted:
+
+![Redacted checkAO3 popup screenshot](docs/images/popup-redacted.png)
 
 ## How growth values work
 
@@ -170,10 +144,32 @@ You need to load [manifest.json](d:\projects\checkAO3\manifest.json) again after
 3. Click `Inspect`
 4. Look at the console for popup or background errors
 
+## Current development state
+
+- optimized for public author work pages
+- uses one selected growth window at a time in the popup
+- does not handle AO3 login flows inside the extension UI
+- stores data only in the local Firefox profile
+- growth values depend on how many snapshots you already collected locally
+
 ## Notes
 
-This project currently targets local development and testing in Firefox.
-If you want permanent installation later, the extension will need to be packaged and signed for Firefox distribution.
+This extension is not registered for regular Firefox distribution yet and is currently intended to run only as a temporary add-on in Firefox debug mode.
 
+## Legal and policy note
 
+- AO3 policy is separate from the source-code license
+- this project is unofficial and is not affiliated with AO3 or OTW
+- see [NOTICE.md](d:\projects\checkAO3\NOTICE.md) for the AO3-specific notice
 
+## Project structure
+
+- [manifest.json](d:\projects\checkAO3\manifest.json): Firefox extension manifest
+- [popup/popup.html](d:\projects\checkAO3\popup\popup.html): popup markup
+- [popup/popup.css](d:\projects\checkAO3\popup\popup.css): popup styling
+- [popup/popup.js](d:\projects\checkAO3\popup\popup.js): popup rendering and CSV export
+- [background/background.js](d:\projects\checkAO3\background\background.js): page walking and snapshot saving
+- [content/ao3-parser.js](d:\projects\checkAO3\content\ao3-parser.js): AO3 page parser
+- [lib/dates.js](d:\projects\checkAO3\lib\dates.js): formatting and delta calculations
+- [lib/storage.js](d:\projects\checkAO3\lib\storage.js): local Firefox storage helpers
+- [docs/images/popup-redacted.png](d:\projects\checkAO3\docs\images\popup-redacted.png): redacted popup screenshot
