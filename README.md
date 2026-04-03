@@ -1,7 +1,7 @@
 # checkAO3
 
 `checkAO3` is a Firefox extension for tracking AO3 author work stats without opening individual work pages.
-![alt text](image.png)
+
 ## What the extension does
 
 - accepts any AO3 author URL
