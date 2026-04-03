@@ -1,7 +1,7 @@
 # checkAO3
 
 `checkAO3` is a Firefox extension for tracking AO3 author work stats without opening individual work pages.
-
+![alt text](image.png)
 ## What the extension does
 
 - accepts any AO3 author URL
@@ -11,6 +11,12 @@
 - stores local history in Firefox storage
 - shows current stats plus growth for `24h`, `7d`, or `30d`
 - exports the current table as CSV
+
+## Screenshot
+
+Example popup view with sensitive AO3 identifiers redacted:
+
+![Redacted checkAO3 popup screenshot](docs/images/popup-redacted.png)
 
 ## Current MVP limits
 
@@ -168,3 +174,6 @@ You need to load [manifest.json](d:\projects\checkAO3\manifest.json) again after
 
 This project currently targets local development and testing in Firefox.
 If you want permanent installation later, the extension will need to be packaged and signed for Firefox distribution.
+
+
+
