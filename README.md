@@ -20,6 +20,13 @@
 - stores data only in the local Firefox profile
 - growth values depend on how many snapshots you already collected locally
 
+## Legal and policy note
+
+- the repository code remains MIT-licensed in [LICENSE](d:\projects\checkAO3\LICENSE)
+- AO3 policy is separate from the source-code license
+- this project is unofficial and is not affiliated with AO3 or OTW
+- see [NOTICE.md](d:\projects\checkAO3\NOTICE.md) for the AO3-specific notice
+
 ## Project structure
 
 - [manifest.json](d:\projects\checkAO3\manifest.json): Firefox extension manifest
