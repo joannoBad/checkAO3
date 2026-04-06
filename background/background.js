@@ -1,15 +1,17 @@
 const REFRESH_DELAY_MS = 1400;
 
-browser.runtime.onMessage.addListener((message) => {
-  if (message?.type === "refresh-author") {
-    return refreshAuthor(message.payload.url);
-  }
+if (typeof browser !== "undefined" && browser.runtime && browser.runtime.onMessage) {
+  browser.runtime.onMessage.addListener((message) => {
+    if (message?.type === "refresh-author") {
+      return refreshAuthor(message.payload.url);
+    }
 
-  return undefined;
-});
+    return undefined;
+  });
+}
 
 function sleep(timeoutMs) {
-  return new Promise((resolve) => window.setTimeout(resolve, timeoutMs));
+  return new Promise((resolve) => globalThis.setTimeout(resolve, timeoutMs));
 }
 
 function normalizeAuthorUrl(rawUrl) {
@@ -86,14 +88,9 @@ function mergeWorkHistory(existingWork, incomingWork, capturedAt) {
   };
 
   const lastSnapshot = history[history.length - 1];
-  const sameStats =
-    lastSnapshot &&
-    lastSnapshot.hits === snapshot.hits &&
-    lastSnapshot.kudos === snapshot.kudos &&
-    lastSnapshot.bookmarks === snapshot.bookmarks &&
-    lastSnapshot.comments === snapshot.comments;
+  const sameMoment = lastSnapshot && lastSnapshot.capturedAt === snapshot.capturedAt;
 
-  if (!sameStats) {
+  if (!sameMoment) {
     history.push(snapshot);
   }
 
@@ -128,7 +125,8 @@ async function refreshAuthor(rawUrl) {
       }
     }
 
-    const existingAuthor = (await window.checkAo3Storage.getAuthor(username)) || {
+    const storageApi = globalThis.checkAo3Storage;
+    const existingAuthor = (await storageApi.getAuthor(username)) || {
       name: username,
       url: normalized,
       works: {}
@@ -147,8 +145,8 @@ async function refreshAuthor(rawUrl) {
       works
     };
 
-    await window.checkAo3Storage.saveAuthor(username, updatedAuthor);
-    await window.checkAo3Storage.setLatestAuthorKey(username);
+    await storageApi.saveAuthor(username, updatedAuthor);
+    await storageApi.setLatestAuthorKey(username);
 
     return {
       ok: true,
@@ -164,4 +162,11 @@ async function refreshAuthor(rawUrl) {
       error: error.message
     };
   }
+}
+
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = {
+    mergeWorkHistory,
+    normalizeAuthorUrl
+  };
 }

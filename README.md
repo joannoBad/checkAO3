@@ -144,6 +144,16 @@ You need to load [manifest.json](d:\projects\checkAO3\manifest.json) again after
 3. Click `Inspect`
 4. Look at the console for popup or background errors
 
+## Testing
+
+Run the snapshot-history tests locally with:
+
+```bash
+node --test tests/*.test.js
+```
+
+This project includes generated snapshot cases for delta calculation, window boundaries, unchanged refreshes, and duplicate timestamp protection.
+
 ## Current development state
 
 - optimized for public author work pages
