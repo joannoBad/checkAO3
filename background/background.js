@@ -145,7 +145,7 @@ async function refreshAuthor(rawUrl) {
       works
     };
 
-    await storageApi.saveAuthor(username, updatedAuthor);
+    await storageApi.saveAuthor(username, updatedAuthor, capturedAt);
     await storageApi.setLatestAuthorKey(username);
 
     return {

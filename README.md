@@ -5,12 +5,15 @@
 ## What the extension does
 
 - accepts any AO3 author URL
-- normalizes it to `/users/<name>/works`
+- can save frequently used author URLs in a local dropdown list
+- normalizes author links to `/users/<name>/works`
 - walks author work pages one by one
 - reads stats from listing pages only
 - stores local history in Firefox storage
-- shows current stats plus growth for `24h`, `7d`, or `30d`
+- shows current stats plus growth for `24h`, `7d`, `30d`, and `All time`
+- shows the date of the oldest preserved snapshot
 - exports the current table as CSV
+- includes a diagnostics panel for snapshot counts, storage size, and cleanup settings
 
 ## Requirements
 
@@ -45,11 +48,14 @@ After that, the extension should appear in the Firefox extensions list and in th
 2. Paste an AO3 author URL into the input field.
    Example:
    `https://archiveofourown.org/users/username/works`
-3. Click `Refresh`.
-4. Wait while the extension walks the author's works pages.
-5. The table will fill with current stats for each work.
-6. Use the `24h`, `7d`, and `30d` buttons to switch the growth window.
-7. Click `Export CSV` if you want to save the current table.
+3. Optional: click `Save` to keep this author in the local dropdown list.
+4. Optional: choose a saved author from the dropdown instead of pasting the URL again.
+5. Click `Refresh`.
+6. Wait while the extension walks the author's works pages.
+7. The table will fill with current stats for each work.
+8. Use the `24h`, `7d`, `30d`, and `All time` buttons to switch the growth window.
+9. Click `Export CSV` if you want to save the current table.
+10. Click `Diagnostics` if you want to inspect storage and cleanup settings.
 
 ## Screenshot
 
@@ -57,23 +63,59 @@ Example popup view with sensitive AO3 identifiers redacted:
 
 ![Redacted checkAO3 popup screenshot](docs/images/popup-redacted.png)
 
+Saved author links can be kept in a local dropdown for faster switching:
+
+![Redacted saved authors screenshot](docs/images/popup-saved-authors-redacted.png)
+
 ## How growth values work
 
 The extension stores snapshots locally and compares the newest snapshot with an older one.
 
 - On the first refresh, you only get current stats.
-- If there is no older snapshot yet, growth shows `-`.
+- If there is no older snapshot yet, rolling windows show `-`.
 - As soon as you have at least two snapshots, the extension starts showing changes.
-- For each selected window (`24h`, `7d`, `30d`), the extension uses the earliest available snapshot inside that window.
-- If there is no snapshot inside the full window yet, it falls back to the earliest older snapshot you do have.
+- For each selected rolling window (`24h`, `7d`, `30d`), the extension uses the latest snapshot at or before the window boundary.
+- If there is no snapshot old enough for the full window yet, it falls back to the earliest older snapshot you do have.
+- `All time` compares the current values to the oldest preserved snapshot for each work.
+- The popup also shows the date of the oldest preserved snapshot currently available for the loaded author.
 
 This means growth can start showing immediately after the second refresh, even if a full 24 hours have not passed yet.
 
 Example:
 
-- first refresh: `77`, growth is `-`
-- second refresh a few minutes later: `78`, growth can show `+1`
-- after more snapshots over time: `7d` and `30d` become more representative
+- first refresh: `77`, rolling growth is `-`, all-time growth is `0`
+- second refresh a few minutes later: `78`, `24h` can show `+1`
+- after more snapshots over time: `7d`, `30d`, and `All time` become more informative
+
+## Diagnostics and cleanup
+
+The diagnostics panel shows:
+
+- number of authors stored
+- number of works stored
+- number of snapshots stored
+- approximate local storage usage
+- oldest stored snapshot date
+
+The panel also includes retention settings:
+
+- `Automatically delete snapshots older than 31 days`
+- `Delete primary snapshots during cleanup`
+- `Run cleanup now`
+- `Clear all snapshots`
+
+Cleanup rules are designed so that:
+
+- the latest snapshot is always kept
+- a 30-day comparison anchor is preserved when such history exists
+- the first snapshot is preserved by default so `All time` can still be calculated
+- if `Delete primary snapshots during cleanup` is enabled, the oldest baseline may be removed during pruning
+
+`Clear all snapshots` removes stored snapshot history but keeps the extension settings and saved author links.
+
+Diagnostics view with author-specific identifiers redacted:
+
+![Redacted diagnostics screenshot](docs/images/popup-diagnostics-redacted.png)
 
 ## How to reload the extension after code changes
 
@@ -111,7 +153,10 @@ A quick smoke test:
    - the author name appears
    - `Works tracked` is greater than `0`
    - the table shows work titles and current stats
+   - the oldest snapshot date is shown after history exists
    - growth values show `-`, `0`, or signed numbers such as `+1`
+6. Save the author URL and confirm it appears in the dropdown list.
+7. Open `Diagnostics` and confirm snapshot counts and approximate storage are visible.
 
 ## Troubleshooting
 
@@ -128,9 +173,13 @@ A quick smoke test:
 - Click `Reload` for `checkAO3`
 - Reopen the popup
 
-### I see `-` under growth values
+### I see `-` under rolling growth values
 
 That is expected when there is not enough history yet.
+
+### Why does `All time` stop working after cleanup?
+
+That can happen only if you enabled `Delete primary snapshots during cleanup`, because the oldest baseline may then be removed.
 
 ### The extension disappears after restarting Firefox
 
@@ -152,15 +201,21 @@ Run the snapshot-history tests locally with:
 node --test tests/*.test.js
 ```
 
-This project includes generated snapshot cases for delta calculation, window boundaries, unchanged refreshes, and duplicate timestamp protection.
+This project includes generated snapshot cases for:
+
+- rolling delta calculation
+- all-time delta calculation
+- window-boundary selection
+- unchanged refreshes
+- duplicate timestamp protection
+- snapshot cleanup and retention rules
 
 ## Current development state
 
 - optimized for public author work pages
-- uses one selected growth window at a time in the popup
-- does not handle AO3 login flows inside the extension UI
 - stores data only in the local Firefox profile
-- growth values depend on how many snapshots you already collected locally
+- does not handle AO3 login flows inside the extension UI
+- cleanup currently keeps history at the per-work snapshot level rather than using an external database
 
 ## Notes
 
@@ -177,9 +232,16 @@ This extension is not registered for regular Firefox distribution yet and is cur
 - [manifest.json](d:\projects\checkAO3\manifest.json): Firefox extension manifest
 - [popup/popup.html](d:\projects\checkAO3\popup\popup.html): popup markup
 - [popup/popup.css](d:\projects\checkAO3\popup\popup.css): popup styling
-- [popup/popup.js](d:\projects\checkAO3\popup\popup.js): popup rendering and CSV export
+- [popup/popup.js](d:\projects\checkAO3\popup\popup.js): popup rendering, saved authors, diagnostics, and CSV export
 - [background/background.js](d:\projects\checkAO3\background\background.js): page walking and snapshot saving
 - [content/ao3-parser.js](d:\projects\checkAO3\content\ao3-parser.js): AO3 page parser
-- [lib/dates.js](d:\projects\checkAO3\lib\dates.js): formatting and delta calculations
-- [lib/storage.js](d:\projects\checkAO3\lib\storage.js): local Firefox storage helpers
+- [lib/dates.js](d:\projects\checkAO3\lib\dates.js): formatting, oldest snapshot lookup, and delta calculations
+- [lib/storage.js](d:\projects\checkAO3\lib\storage.js): local Firefox storage, saved authors, diagnostics, and cleanup helpers
+- [tests/snapshot-history.test.js](d:\projects\checkAO3\tests\snapshot-history.test.js): snapshot and cleanup tests
 - [docs/images/popup-redacted.png](d:\projects\checkAO3\docs\images\popup-redacted.png): redacted popup screenshot
+- [docs/images/popup-saved-authors-redacted.png](d:\projects\checkAO3\docs\images\popup-saved-authors-redacted.png): redacted saved authors screenshot
+- [docs/images/popup-diagnostics-redacted.png](d:\projects\checkAO3\docs\images\popup-diagnostics-redacted.png): redacted diagnostics screenshot
+
+
+
+

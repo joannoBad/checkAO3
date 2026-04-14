@@ -27,9 +27,19 @@
             required
           />
           <div class="actions">
-            <button id="refresh-button" type="submit">Refresh</button>
-            <button id="export-button" type="button" class="ghost">Export CSV</button>
-            <button id="clear-button" type="button" class="ghost">Clear</button>
+            <button id="save-author-button" type="button" class="ghost" title="Save the current author URL into a local list so you can quickly reuse it later from the dropdown without retyping.">Save</button>
+            <button id="refresh-button" type="submit" title="Open the AO3 author works pages in hidden tabs, collect the latest listing stats, and save a new local snapshot for every tracked work.">Refresh</button>
+            <button id="export-button" type="button" class="ghost" title="Export the currently visible table to CSV using the selected growth window, including current values and deltas.">Export CSV</button>
+            <button id="diagnostics-button" type="button" class="ghost" title="Open a diagnostics panel with snapshot counts, approximate local storage size, retention settings, and cleanup actions.">Diagnostics</button>
+          </div>
+          <div class="saved-author-row">
+            <label for="saved-authors-select" class="meta-label">Saved authors</label>
+            <div class="saved-author-controls">
+              <select id="saved-authors-select" title="Choose a previously saved author URL and load it back into the input field.">
+                <option value="">Select a saved author</option>
+              </select>
+              <button id="remove-saved-author-button" type="button" class="ghost" title="Remove the currently selected saved author link from the local dropdown list without touching any stored snapshots.">Remove</button>
+            </div>
           </div>
         </form>
         <p id="status" class="status">Ready.</p>
@@ -48,15 +58,66 @@
           <div class="meta-label">Works tracked</div>
           <div id="work-count" class="meta-value">0</div>
         </div>
+        <div>
+          <div class="meta-label">Oldest snapshot</div>
+          <div id="oldest-snapshot" class="meta-value">Never</div>
+        </div>
+      </section>
+
+      <section id="diagnostics-panel" class="panel compact-panel diagnostics-panel hidden">
+        <div class="section-head">
+          <div>
+            <div class="meta-label">Diagnostics</div>
+            <div class="section-subtitle">Storage usage, retention settings, and cleanup controls.</div>
+          </div>
+        </div>
+
+        <div class="diagnostics-grid">
+          <div class="diagnostic-card">
+            <div class="meta-label">Authors stored</div>
+            <div id="diagnostic-author-count" class="meta-value">0</div>
+          </div>
+          <div class="diagnostic-card">
+            <div class="meta-label">Works stored</div>
+            <div id="diagnostic-work-count" class="meta-value">0</div>
+          </div>
+          <div class="diagnostic-card">
+            <div class="meta-label">Snapshots stored</div>
+            <div id="diagnostic-snapshot-count" class="meta-value">0</div>
+          </div>
+          <div class="diagnostic-card">
+            <div class="meta-label">Approx storage</div>
+            <div id="diagnostic-size" class="meta-value">0 B</div>
+          </div>
+        </div>
+
+        <div class="settings-grid">
+          <label class="setting-item" title="When enabled, the extension automatically removes snapshots older than 31 days during future refreshes and settings saves. It still keeps enough history to calculate the 30-day delta whenever such history exists.">
+            <input id="auto-delete-setting" type="checkbox" />
+            <span>Automatically delete snapshots older than 31 days</span>
+          </label>
+          <label class="setting-item" title="When enabled together with automatic cleanup, the very first snapshot for each work may also be deleted. Leave this off if you always want to keep an all-time baseline.">
+            <input id="delete-primary-setting" type="checkbox" />
+            <span>Delete primary snapshots during cleanup</span>
+          </label>
+        </div>
+
+        <p id="diagnostic-note" class="status subtle-status">Cleanup keeps at least the latest snapshot and preserves a 30-day comparison point when available.</p>
+
+        <div class="actions">
+          <button id="run-cleanup-button" type="button" class="ghost" title="Run the cleanup rules right now using the current settings. This updates local storage immediately and refreshes diagnostics.">Run cleanup now</button>
+          <button id="clear-snapshots-button" type="button" class="ghost danger" title="Delete all stored author and work snapshots from this extension. Settings are kept, but all local history used for deltas is removed.">Clear all snapshots</button>
+        </div>
       </section>
 
       <section class="panel compact-panel">
         <div class="period-bar">
           <span class="meta-label">Growth window</span>
           <div class="period-switch" id="period-switch">
-            <button type="button" data-days="1" class="period-button is-active">24h</button>
-            <button type="button" data-days="7" class="period-button">7d</button>
-            <button type="button" data-days="30" class="period-button">30d</button>
+            <button type="button" data-period="1" class="period-button is-active" title="Show change since roughly 24 hours ago, or from the earliest available local snapshot if a full 24-hour baseline does not exist yet.">24h</button>
+            <button type="button" data-period="7" class="period-button" title="Show change since roughly 7 days ago, or from the earliest available local snapshot if a full 7-day baseline does not exist yet.">7d</button>
+            <button type="button" data-period="30" class="period-button" title="Show change since roughly 30 days ago. Cleanup preserves a comparison anchor so this window stays usable when 30-day-old snapshots exist.">30d</button>
+            <button type="button" data-period="all" class="period-button" title="Show the difference between the current values and the oldest preserved snapshot for each work.">All time</button>
           </div>
         </div>
         <div class="table-wrap">

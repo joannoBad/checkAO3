@@ -1,8 +1,9 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 
-const { computeDelta, formatDelta } = require("../lib/dates.js");
+const { ALL_TIME_PERIOD, computeDelta, formatDelta, getOldestSnapshotAt } = require("../lib/dates.js");
 const { mergeWorkHistory } = require("../background/background.js");
+const { pruneWorkHistory } = require("../lib/storage.js");
 
 function snapshot(capturedAt, values) {
   return {
@@ -34,9 +35,14 @@ function work(values = {}) {
   };
 }
 
-test("computeDelta returns null for empty or single-snapshot history", () => {
+test("computeDelta returns null for empty or single-snapshot history in rolling windows", () => {
   assert.equal(computeDelta([], "hits", 1), null);
   assert.equal(computeDelta(buildHistory([["2026-04-06T12:00:00.000Z", 10]]), "hits", 1), null);
+});
+
+test("computeDelta returns zero for all-time mode when only one snapshot exists", () => {
+  const history = buildHistory([["2026-04-06T12:00:00.000Z", 10]]);
+  assert.equal(computeDelta(history, "hits", ALL_TIME_PERIOD), 0);
 });
 
 test("computeDelta uses the snapshot at or before the 24h boundary", () => {
@@ -86,6 +92,15 @@ test("computeDelta returns zero when snapshots exist but the metric did not chan
   assert.equal(computeDelta(history, "comments", 1), 0);
 });
 
+test("getOldestSnapshotAt returns the first snapshot timestamp", () => {
+  const history = buildHistory([
+    ["2026-04-01T12:00:00.000Z", 70],
+    ["2026-04-06T12:00:00.000Z", 84]
+  ]);
+
+  assert.equal(getOldestSnapshotAt(history), "2026-04-01T12:00:00.000Z");
+});
+
 test("mergeWorkHistory appends a new refresh even when stats are unchanged", () => {
   const existingWork = {
     history: buildHistory([
@@ -117,6 +132,60 @@ test("mergeWorkHistory does not duplicate a snapshot with the exact same capture
   );
 
   assert.equal(merged.history.length, 1);
+});
+
+test("pruneWorkHistory keeps the primary snapshot by default for all-time comparisons", () => {
+  const history = buildHistory([
+    ["2026-02-01T12:00:00.000Z", 10],
+    ["2026-03-01T12:00:00.000Z", 20],
+    ["2026-03-10T12:00:00.000Z", 30],
+    ["2026-04-12T12:00:00.000Z", 40]
+  ]);
+
+  const pruned = pruneWorkHistory(history, {
+    autoDeleteOldSnapshots: true,
+    deletePrimarySnapshots: false
+  }, "2026-04-13T12:00:00.000Z");
+
+  assert.equal(pruned[0].capturedAt, "2026-02-01T12:00:00.000Z");
+  assert.equal(pruned[pruned.length - 1].capturedAt, "2026-04-12T12:00:00.000Z");
+});
+
+test("pruneWorkHistory can remove the primary snapshot but still preserves a 30-day anchor", () => {
+  const history = buildHistory([
+    ["2026-02-01T12:00:00.000Z", 10],
+    ["2026-03-13T11:00:00.000Z", 21],
+    ["2026-03-13T12:00:00.000Z", 22],
+    ["2026-03-20T12:00:00.000Z", 25],
+    ["2026-04-12T12:00:00.000Z", 40]
+  ]);
+
+  const pruned = pruneWorkHistory(history, {
+    autoDeleteOldSnapshots: true,
+    deletePrimarySnapshots: true
+  }, "2026-04-13T12:00:00.000Z");
+
+  assert.deepEqual(
+    pruned.map((item) => item.capturedAt),
+    [
+      "2026-03-13T12:00:00.000Z",
+      "2026-03-20T12:00:00.000Z",
+      "2026-04-12T12:00:00.000Z"
+    ]
+  );
+});
+
+test("pruneWorkHistory keeps a single snapshot if history is too short to prune further", () => {
+  const history = buildHistory([
+    ["2026-02-01T12:00:00.000Z", 10]
+  ]);
+
+  const pruned = pruneWorkHistory(history, {
+    autoDeleteOldSnapshots: true,
+    deletePrimarySnapshots: true
+  }, "2026-04-13T12:00:00.000Z");
+
+  assert.equal(pruned.length, 1);
 });
 
 test("formatDelta handles null, zero, and positive values consistently", () => {
